@@ -93,7 +93,9 @@ class TursoSessionStore extends session.Store {
         args: [sid],
       });
       if (hasil.rows.length === 0) return callback(null, null);
-      const [sess, kadaluarsa] = hasil.rows[0];
+      const row = hasil.rows[0];
+      const sess = row[0];
+      const kadaluarsa = row[1];
       if (Date.now() > Number(kadaluarsa)) {
         await db.execute({ sql: 'DELETE FROM sessions WHERE sid = ?', args: [sid] });
         return callback(null, null);
