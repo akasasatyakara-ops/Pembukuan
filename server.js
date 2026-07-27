@@ -451,11 +451,12 @@ app.post('/api/restore', async (req, res) => {
   ];
 
   for (const t of transaksi) {
+    const idBaru = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     perintah.push({
       sql: `INSERT INTO transaksi (id, tanggal, akun, jenis, kategori, keterangan, jumlah, user_id, dibuat_pada)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
-        t.id || Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+        idBaru,
         t.tanggal,
         t.akun,
         t.jenis,
