@@ -70,6 +70,78 @@ async function siapkanDatabase() {
       value TEXT NOT NULL
     );
   `);
+
+  // Tabel session login — disimpan permanen di Turso, BUKAN di RAM,
+  // supaya login tidak hilang kalau server restart/sleep/crash.
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      sid        TEXT PRIMARY KEY,
+      sess       TEXT NOT NULL,
+      kadaluarsa INTEGER NOT NULL
+    );
+  `);
+}
+
+// ---------- Session store custom berbasis Turso --------------------------------
+// express-session butuh objek "Store" dengan method get/set/destroy.
+// Ini implementasi minimal yang nyimpen semuanya sebagai baris di tabel `sessions`.
+class TursoSessionStore extends session.Store {
+  async get(sid, callback) {
+    try {
+      const hasil = await db.execute({
+        sql: 'SELECT sess, kadaluarsa FROM sessions WHERE sid = ?',
+        args: [sid],
+      });
+      if (hasil.rows.length === 0) return callback(null, null);
+      const [sess, kadaluarsa] = hasil.rows[0];
+      if (Date.now() > Number(kadaluarsa)) {
+        await db.execute({ sql: 'DELETE FROM sessions WHERE sid = ?', args: [sid] });
+        return callback(null, null);
+      }
+      callback(null, JSON.parse(sess));
+    } catch (err) {
+      callback(err);
+    }
+  }
+
+  async set(sid, sessionData, callback) {
+    try {
+      const maxAge = sessionData.cookie && sessionData.cookie.maxAge ? sessionData.cookie.maxAge : 30 * 24 * 60 * 60 * 1000;
+      const kadaluarsa = Date.now() + maxAge;
+      await db.execute({
+        sql: `INSERT INTO sessions (sid, sess, kadaluarsa) VALUES (?, ?, ?)
+              ON CONFLICT(sid) DO UPDATE SET sess = excluded.sess, kadaluarsa = excluded.kadaluarsa`,
+        args: [sid, JSON.stringify(sessionData), kadaluarsa],
+      });
+      callback(null);
+    } catch (err) {
+      callback(err);
+    }
+  }
+
+  async destroy(sid, callback) {
+    try {
+      await db.execute({ sql: 'DELETE FROM sessions WHERE sid = ?', args: [sid] });
+      callback(null);
+    } catch (err) {
+      callback(err);
+    }
+  }
+
+  async touch(sid, sessionData, callback) {
+    // Perpanjang masa berlaku tanpa mengubah isi session
+    try {
+      const maxAge = sessionData.cookie && sessionData.cookie.maxAge ? sessionData.cookie.maxAge : 30 * 24 * 60 * 60 * 1000;
+      const kadaluarsa = Date.now() + maxAge;
+      await db.execute({
+        sql: 'UPDATE sessions SET kadaluarsa = ? WHERE sid = ?',
+        args: [kadaluarsa, sid],
+      });
+      callback(null);
+    } catch (err) {
+      callback(err);
+    }
+  }
 }
 
 // Dipanggil sekali saat ada user BENAR-BENAR BARU yang pertama kali login.
@@ -185,6 +257,7 @@ app.use(express.json());
 
 app.use(
   session({
+    store: new TursoSessionStore(),
     secret: process.env.SESSION_SECRET || 'ganti-rahasia-sesi-ini-di-env-var',
     resave: false,
     saveUninitialized: false,
