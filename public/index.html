@@ -120,6 +120,13 @@
     <div class="navitem" style="margin-bottom:.1rem;" onclick="unduhCadangan()"><i class="fa-solid fa-download"></i> Unduh Cadangan</div>
     <div class="navitem" style="margin-bottom:0;" onclick="document.getElementById('restoreInput').click()"><i class="fa-solid fa-upload"></i> Pulihkan Cadangan</div>
     <input type="file" id="restoreInput" accept="application/json" style="display:none;" onchange="pulihkanCadangan(this)">
+    <div id="userInfoBox" style="display:flex;align-items:center;gap:.55rem;padding:.7rem .5rem .3rem;margin-top:.4rem;border-top:1px solid rgba(255,255,255,.08);">
+      <img id="userFoto" src="" alt="" style="width:30px;height:30px;border-radius:50%;display:none;">
+      <div style="flex:1;min-width:0;">
+        <div id="userNama" style="color:#fff;font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        <a href="/auth/logout" style="color:#8CA0B5;font-size:.72rem;text-decoration:none;">Keluar</a>
+      </div>
+    </div>
   </div>
 </aside>
 
@@ -919,7 +926,34 @@ document.querySelectorAll('.navitem[data-tab]').forEach(item=>{
   });
 });
 
+// Kalau sesi login habis / belum login, semua panggilan API akan dapat 401 —
+// tangkap itu secara global dan lempar ke halaman login.
+const fetchAsli = window.fetch;
+window.fetch = async function(...args){
+  const res = await fetchAsli(...args);
+  if(res.status === 401){
+    window.location.href = '/login.html';
+    return res;
+  }
+  return res;
+};
+
+async function loadUserInfo(){
+  try{
+    const res = await fetch('/api/me');
+    if(!res.ok) return;
+    const user = await res.json();
+    document.getElementById('userNama').textContent = user.name || user.email || 'Pengguna';
+    if(user.foto){
+      const img = document.getElementById('userFoto');
+      img.src = user.foto;
+      img.style.display = 'block';
+    }
+  }catch(e){}
+}
+
 document.getElementById('fTanggal').value = todayStr();
+loadUserInfo();
 loadState();
 </script>
 </body>

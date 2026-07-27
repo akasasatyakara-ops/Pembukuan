@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masuk — AKASA VERSE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root{
+    --navy:#123458; --navy-dark:#0c2540; --navy-light:#1c4a78;
+    --bg:#F3F5F8; --card:#FFFFFF; --border:#E3E8EF;
+    --text:#1C2B3A; --muted:#6B7A8D;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:'Inter',sans-serif;background:var(--navy-dark);color:var(--text);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .box{
+    background:var(--card);border-radius:18px;padding:2.4rem 2.2rem;
+    width:100%;max-width:360px;text-align:center;
+    box-shadow:0 20px 50px rgba(0,0,0,.25);
+  }
+  .logo{
+    width:56px;height:56px;border-radius:14px;background:var(--navy-light);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;
+  }
+  .logo i{color:#fff;font-size:1.4rem;}
+  h1{font-size:1.15rem;font-weight:800;color:var(--navy);margin:0 0 .25rem;}
+  p.sub{font-size:.85rem;color:var(--muted);margin:0 0 1.8rem;}
+  .btn-google{
+    display:flex;align-items:center;justify-content:center;gap:.6rem;
+    width:100%;padding:.7rem 1rem;border-radius:10px;border:1px solid var(--border);
+    background:#fff;color:var(--text);font-weight:600;font-size:.9rem;
+    text-decoration:none;cursor:pointer;transition:.15s;
+  }
+  .btn-google:hover{background:var(--bg);}
+  .btn-google img{width:18px;height:18px;}
+  .error{
+    background:#FDECEA;color:#D6483F;border-radius:9px;padding:.6rem .8rem;
+    font-size:.8rem;margin-bottom:1.2rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="box">
+  <div class="logo"><i class="fa-solid fa-shirt"></i></div>
+  <h1>AKASA VERSE</h1>
+  <p class="sub">Masuk untuk mengakses pembukuan kamu</p>
+
+  <div class="error" id="errBox" style="display:none;">
+    Gagal masuk dengan Google. Coba lagi.
+  </div>
+
+  <a class="btn-google" href="/auth/google">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+    Masuk dengan Google
+  </a>
+</div>
+
+<script>
+  if(location.search.includes('error')){
+    document.getElementById('errBox').style.display = 'block';
+  }
+</script>
+</body>
+</html>
