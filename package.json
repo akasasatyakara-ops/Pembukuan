@@ -1,0 +1,13 @@
+{
+  "name": "akasa-verse",
+  "version": "1.0.0",
+  "description": "Aplikasi catatan kas & bank AKASA VERSE",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "@libsql/client": "^0.14.0"
+  }
+}
