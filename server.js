@@ -5,6 +5,16 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { createClient } = require('@libsql/client');
 
+// Pengaman: kalau ada error async yang tidak tertangkap di route manapun,
+// jangan sampai proses Node mati total (yang bikin 502 Bad Gateway) —
+// cukup dicatat di log saja.
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled rejection (server tetap jalan):', err);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception (server tetap jalan):', err);
+});
+
 // ---------- Setup database --------------------------------------------------
 const db = createClient(
   process.env.TURSO_DATABASE_URL
@@ -458,7 +468,12 @@ app.post('/api/restore', async (req, res) => {
     });
   }
 
-  await db.batch(perintah, 'write');
+  try {
+    await db.batch(perintah, 'write');
+  } catch (err) {
+    console.error('Gagal restore:', err);
+    return res.status(500).json({ error: 'Gagal menyimpan data cadangan ke database' });
+  }
 
   res.json({ ok: true });
 });
